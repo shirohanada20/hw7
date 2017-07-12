@@ -9,6 +9,29 @@ import webapp2
 
 # Reads json description of the board and provides simple interface.
 class Game:
+
+	points = [[2 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
+	points[0][0] = 4
+	points[0][7] = 4
+	points[7][0] = 4
+	points[7][7] = 4
+	points[0][2] = 3
+	points[0][5] = 3
+	points[2][0] = 3
+	points[2][7] = 3
+	points[5][0] = 3
+	points[5][7] = 3
+	points[7][2] = 3
+	points[7][5] = 3
+	for x in xrange(1, 7):
+		points[x][1] = -1
+	for x in xrange(1, 7):
+		points[x][6] = -1
+	for y in xrange(2, 6):
+		points[1][y] = -1
+	for y in xrange(2, 6):
+		points[6][y] = -1
+
 	# Takes json or a board directly.
 	def __init__(self, body=None, board=None):
                 if body:
@@ -89,10 +112,42 @@ class Game:
 		        | self.__UpdateBoardDirection(pieces, x, y, -1, -1)):
                         # Nothing was captured. Move is invalid.
                         return None
-                
+
                 # Something was captured. Move is valid.
                 new_board["Next"] = 3 - self.Next()
 		return Game(board=new_board)
+
+	def EvaluateBoard(self, move):#player1 +, player2 -
+		score = 0
+		board = self.NextBoardPosition(move)
+		for x in xrange(0, 8):
+			for y in xrange(0, 8):
+				if board.Pos(x+1, y+1) == 1:
+					score += self.points[x][y]
+				elif board.Pos(x+1, y+1) == 2:
+					score -= self.points[x][y]
+				else :
+					pass
+		return score
+
+	def MinMax(self, player, valid_moves):
+		score = 0
+		new_score = 0
+		move = valid_moves[0]
+		length = len(valid_moves)
+		if player == 1:
+			for i in xrange(length):
+				new_score = self.EvaluateBoard(valid_moves[i])
+				if score < new_score:
+					move = valid_moves[i]
+					score = new_score
+		else :
+			for j in xrange(length):
+				new_score = self.EvaluateBoard(valid_moves[j])
+				if score > new_score:
+					move = valid_moves[j]
+					score = new_score
+		return move
 
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -161,8 +216,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # TO STEP STUDENTS:
                 # You'll probably want to change how this works, to do something
                 # more clever than just picking a random move.
-	    	move = random.choice(valid_moves)
-    		self.response.write(PrettyMove(move))
+			move = g.MinMax(g.Next(), valid_moves)
+			self.response.write(PrettyMove(move))
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)

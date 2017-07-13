@@ -1,5 +1,16 @@
 # Homework 7
 
+ID_search is the function for MinMax algorithm.
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
 1. Fork a copy for your changes
 2. Clone it to your local workstation
 3. Create a new project to host your AI in https://console.cloud.google.com

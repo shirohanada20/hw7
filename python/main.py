@@ -6,31 +6,34 @@ import json
 import logging
 import random
 import webapp2
+import time
+
+start = time.time()
 
 # Reads json description of the board and provides simple interface.
 class Game:
 
-	points = [[2 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
-	points[0][0] = 4
-	points[0][7] = 4
-	points[7][0] = 4
-	points[7][7] = 4
-	points[0][2] = 3
-	points[0][5] = 3
-	points[2][0] = 3
-	points[2][7] = 3
-	points[5][0] = 3
-	points[5][7] = 3
-	points[7][2] = 3
-	points[7][5] = 3
+	points = [[5 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
+	points[0][0] = 10
+	points[0][7] = 10
+	points[7][0] = 10
+	points[7][7] = 10
+	points[0][2] = 5
+	points[0][5] = 5
+	points[2][0] = 5
+	points[2][7] = 5
+	points[5][0] = 5
+	points[5][7] = 5
+	points[7][2] = 5
+	points[7][5] = 5
 	for x in xrange(1, 7):
-		points[x][1] = -1
+		points[x][1] = -5
 	for x in xrange(1, 7):
-		points[x][6] = -1
+		points[x][6] = -5
 	for y in xrange(2, 6):
-		points[1][y] = -1
+		points[1][y] = -5
 	for y in xrange(2, 6):
-		points[6][y] = -1
+		points[6][y] = -5
 
 	# Takes json or a board directly.
 	def __init__(self, body=None, board=None):
@@ -130,6 +133,18 @@ class Game:
 					pass
 		return score
 
+	def EvaluateBoard2(self):#player1 +, player2 -
+		score = 0
+		for x in xrange(0, 8):
+			for y in xrange(0, 8):
+				if self.Pos(x+1, y+1) == 1:
+					score += self.points[x][y]
+				elif self.Pos(x+1, y+1) == 2:
+					score -= self.points[x][y]
+				else :
+					pass
+		return score
+
 	def MinMax(self, player, valid_moves):
 		score = 0
 		new_score = 0
@@ -148,6 +163,55 @@ class Game:
 					move = valid_moves[j]
 					score = new_score
 		return move
+
+	def ID_search(self, depth):
+		if depth < 1:
+			m = {"Where": [0,0],
+					"As": self.Next()}
+			return self.EvaluateBoard2(), m
+		else:
+			valid_moves = self.ValidMoves()
+			bestmove = {"Where": [2,2],
+			"As": self.Next()}
+			length = len(valid_moves)
+
+			if self.Next() == 1:
+				best = -100000
+			else:
+				best = 100000
+
+			if 0 < length:
+				for i in xrange(length):
+					now = time.time()
+					#if 12 < (now - start):
+						#break
+					#else:
+						#pass
+					nextboard = self.NextBoardPosition(valid_moves[i])
+					now = time.time()
+					if (now - start) < 12:
+						score, _ = nextboard.ID_search(depth - 1)
+					else:
+						score, _ = nextboard.ID_search(0)
+					#print score
+					if self.Next() == 1:
+						if best < score:
+							best = score
+							bestmove = valid_moves[i]
+					else:
+						if score < best:
+							best = score
+							bestmove = valid_moves[i]
+				return best, bestmove
+			else:
+				if self.Next() == 1:
+					bestmove = {"Where": [2,3],
+					"As": self.Next()}
+					return -10000, bestmove
+				else:
+					bestmove = {"Where": [2,4],
+					"As": self.Next()}
+					return 10000, bestmove
 
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -208,6 +272,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
     def pickMove(self, g):
     	# Gets all valid moves.
     	valid_moves = g.ValidMoves()
+    	score = 0
     	if len(valid_moves) == 0:
     		# Passes if no valid moves.
     		self.response.write("PASS")
@@ -216,7 +281,8 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
                 # TO STEP STUDENTS:
                 # You'll probably want to change how this works, to do something
                 # more clever than just picking a random move.
-			move = g.MinMax(g.Next(), valid_moves)
+			#move = g.MinMax(g.Next(), valid_moves)
+			score, move = g.ID_search(5)
 			self.response.write(PrettyMove(move))
 
 app = webapp2.WSGIApplication([

@@ -8,32 +8,54 @@ import random
 import webapp2
 import time
 
-start = time.time()
+
 
 # Reads json description of the board and provides simple interface.
 class Game:
 
-	points = [[5 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
-	points[0][0] = 10
-	points[0][7] = 10
-	points[7][0] = 10
-	points[7][7] = 10
-	points[0][2] = 5
-	points[0][5] = 5
-	points[2][0] = 5
-	points[2][7] = 5
-	points[5][0] = 5
-	points[5][7] = 5
-	points[7][2] = 5
-	points[7][5] = 5
+	points = [[3 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
+	points[0][0] = 500
+	points[0][7] = 500
+	points[7][0] = 500
+	points[7][7] = 500
+	#points[0][2] = 20
+	#points[0][5] = 20
+	#points[2][0] = 20
+	#points[2][7] = 20
+	#points[5][0] = 20
+	#points[5][7] = 20
+	#points[7][2] = 20
+	#points[7][5] = 20
 	for x in xrange(1, 7):
-		points[x][1] = -5
+		points[x][0] = 20
 	for x in xrange(1, 7):
-		points[x][6] = -5
+		points[x][7] = 20
+	for y in xrange(1, 7):
+		points[0][y] = 20
+	for y in xrange(1, 7):
+		points[7][y] = 20
+	for x in xrange(1, 7):
+		points[x][1] = 1
+	for x in xrange(1, 7):
+		points[x][6] = 1
 	for y in xrange(2, 6):
-		points[1][y] = -5
+		points[1][y] = 1
 	for y in xrange(2, 6):
-		points[6][y] = -5
+		points[6][y] = 1
+	points[0][6] = -500
+	points[1][6] = -500
+	points[1][7] = -500
+	points[0][1] = -500
+	points[1][0] = -500
+	points[1][1] = -500
+	points[6][0] = -500
+	points[6][1] = -500
+	points[7][1] = -500
+	points[7][6] = -500
+	points[6][6] = -500
+	points[6][7] = -500
+
+	start = 0
 
 	# Takes json or a board directly.
 	def __init__(self, body=None, board=None):
@@ -133,13 +155,13 @@ class Game:
 					pass
 		return score
 
-	def EvaluateBoard2(self):#player1 +, player2 -
+	def EvaluateBoard2(self, g):#player1 +, player2 -
 		score = 0
 		for x in xrange(0, 8):
 			for y in xrange(0, 8):
-				if self.Pos(x+1, y+1) == 1:
+				if g.Pos(x+1, y+1) == 1:
 					score += self.points[x][y]
-				elif self.Pos(x+1, y+1) == 2:
+				elif g.Pos(x+1, y+1) == 2:
 					score -= self.points[x][y]
 				else :
 					pass
@@ -164,37 +186,43 @@ class Game:
 					score = new_score
 		return move
 
-	def ID_search(self, depth):
+	def count(self, g, player):
+		c = 0
+		for x in xrange(1, 9):
+			for y in xrange(1, 9):
+				if g.Pos(x, y) == player:
+					count += 1
+		return count
+
+	def ID_search(self, g, depth, start):
+		#print start
+		#print depth
 		if depth < 1:
 			m = {"Where": [0,0],
 					"As": self.Next()}
-			return self.EvaluateBoard2(), m
+			return g.EvaluateBoard2(g), m
 		else:
-			valid_moves = self.ValidMoves()
+			valid_moves = g.ValidMoves()
 			bestmove = {"Where": [2,2],
-			"As": self.Next()}
+			"As": g.Next()}
 			length = len(valid_moves)
 
-			if self.Next() == 1:
+			if g.Next() == 1:
 				best = -100000
 			else:
 				best = 100000
 
 			if 0 < length:
 				for i in xrange(length):
+					nextboard = g.NextBoardPosition(valid_moves[i])
 					now = time.time()
-					#if 12 < (now - start):
-						#break
-					#else:
-						#pass
-					nextboard = self.NextBoardPosition(valid_moves[i])
-					now = time.time()
-					if (now - start) < 12:
-						score, _ = nextboard.ID_search(depth - 1)
+					#print now - start
+					if (now - start) < 10:
+						score, _ = nextboard.ID_search(nextboard, depth - 1, start)
 					else:
-						score, _ = nextboard.ID_search(0)
+						score, _ = nextboard.ID_search(nextboard, 0, start)
 					#print score
-					if self.Next() == 1:
+					if g.Next() == 1:
 						if best < score:
 							best = score
 							bestmove = valid_moves[i]
@@ -204,14 +232,108 @@ class Game:
 							bestmove = valid_moves[i]
 				return best, bestmove
 			else:
-				if self.Next() == 1:
+				if g.Next() == 1:
 					bestmove = {"Where": [2,3],
-					"As": self.Next()}
+					"As": g.Next()}
 					return -10000, bestmove
 				else:
 					bestmove = {"Where": [2,4],
-					"As": self.Next()}
+					"As": g.Next()}
 					return 10000, bestmove
+
+	def SearchBestmove(self, g, depth, start):
+		player = g.Next()
+		move = {"Where": [0,0], "As": player}
+		for x in xrange(3, 7):
+			if g.Pos(x, 1) == player:
+				if g.Pos(x-1, 1) == (3 - player):
+					if g.Pos(x-2, 1) == 0:
+						move = {"Where": [x-2, 1], "As": player}
+						return move
+				elif g.Pos(x+1, 1) == (3 - player):
+					if g.Pos(x+2, 1) == 0:
+						move = {"Where": [x+2, 1], "As": player}
+						return move
+
+		for x in xrange(3, 7):
+			if g.Pos(x, 8) == player:
+				if g.Pos(x-1, 8) == (3 - player):
+					if g.Pos(x-2, 8) == 0:
+						move = {"Where": [x-2, 8], "As": player}
+						return move
+				elif g.Pos(x+1, 8) == (3 - player):
+					if g.Pos(x+2, 8) == 0:
+						move = {"Where": [x+2, 8], "As": player}
+						return move
+
+		for y in xrange(3, 7):
+			if g.Pos(1, y) == player:
+				if g.Pos(1, y-1) == (3 - player):
+					if g.Pos(1, y-2) == 0:
+						move = {"Where": [1, y-2], "As": player}
+						return move
+				elif g.Pos(1, y+1) == (3 - player):
+					if g.Pos(1, y+2) == 0:
+						move = {"Where": [1, y+2], "As": player}
+						return move
+
+		for y in xrange(3, 7):
+			if g.Pos(8, y) == player:
+				if g.Pos(8, y-1) == (3 - player):
+					if g.Pos(8, y-2) == 0:
+						move = {"Where": [8, y-2], "As": player}
+						return move
+				elif g.Pos(8, y+1) == (3 - player):
+					if g.Pos(8, y+2) == 0:
+						move = {"Where": [8, y+2], "As": player}
+						return move
+
+		for x in xrange(4, 6):
+			if g.Pos(x, 1) == player:
+				if g.Pos(x-1, 1) == (3 - player) and g.Pos(x-2, 1) == (3 - player):
+					if g.Pos(x-3, 1) == 0:
+						move = {"Where": [x-3, 1], "As": player}
+						return move
+				elif g.Pos(x+1, 1) == (3 - player) and g.Pos(x+2, 1) == (3 - player):
+					if g.Pos(x+3, 1) == 0:
+						move = {"Where": [x+3, 1], "As": player}
+						return move
+		for x in xrange(4, 6):
+			if g.Pos(x, 8) == player:
+				if g.Pos(x-1, 8) == (3 - player) and g.Pos(x-2, 8) == (3 - player):
+					if g.Pos(x-3, 8) == 0:
+						move = {"Where": [x-3, 8], "As": player}
+						return move
+				elif g.Pos(x+1, 8) == (3 - player) and g.Pos(x+2, 8) == (3 - player):
+					if g.Pos(x+3, 8) == 0:
+						move = {"Where": [x+3, 8], "As": player}
+						return move
+
+		for y in xrange(4, 6):
+			if g.Pos(1, y) == player:
+				if g.Pos(1, y-1) == (3 - player) and g.Pos(1, y-2) == (3 - player):
+					if g.Pos(1, y-3) == 0:
+						move = {"Where": [1, y-3], "As": player}
+						return move
+				elif g.Pos(1, y+1) == (3 - player) and g.Pos(1, y+2) == (3 - player):
+					if g.Pos(1, y+3) == 0:
+						move = {"Where": [1, y+3], "As": player}
+						return move
+
+		for y in xrange(4, 6):
+			if g.Pos(8, y) == player:
+				if g.Pos(8, y-1) == (3 - player) and g.Pos(8, y-2) == (3 - player):
+					if g.Pos(8, y-3) == 0:
+						move = {"Where": [8, y-3], "As": player}
+						return move
+				elif g.Pos(8, y+1) == (3 - player) and g.Pos(8, y+2) == (3 - player):
+					if g.Pos(8, y+3) == 0:
+						move = {"Where": [8, y+3], "As": player}
+						return move
+
+		score, bestmove = g.ID_search(g, depth, start)
+		return bestmove
+
 
 # Returns piece on the board.
 # 0 for no pieces, 1 for player 1, 2 for player 2.
@@ -271,18 +393,21 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 
     def pickMove(self, g):
     	# Gets all valid moves.
-    	valid_moves = g.ValidMoves()
-    	score = 0
-    	if len(valid_moves) == 0:
-    		# Passes if no valid moves.
-    		self.response.write("PASS")
-    	else:
-    		# Chooses a valid move randomly if available.
-                # TO STEP STUDENTS:
-                # You'll probably want to change how this works, to do something
-                # more clever than just picking a random move.
+		start = time.time()
+		valid_moves = g.ValidMoves()
+		score = 0
+		if len(valid_moves) == 0:
+			# Passes if no valid moves.
+			self.response.write("PASS")
+		else:
+			# Chooses a valid move randomly if available.
+			# TO STEP STUDENTS:
+			# You'll probably want to change how this works, to do something
+			# more clever than just picking a random move.
 			#move = g.MinMax(g.Next(), valid_moves)
-			score, move = g.ID_search(5)
+			#score, move = g.ID_search(g, 10, time.time())
+			move = g.SearchBestmove(g, 5, time.time())
+			#print score
 			self.response.write(PrettyMove(move))
 
 app = webapp2.WSGIApplication([

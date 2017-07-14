@@ -14,10 +14,10 @@ import time
 class Game:
 
 	points = [[3 for y in xrange(1,9)] for x in xrange(1,9)]# order x,y
-	points[0][0] = 500
-	points[0][7] = 500
-	points[7][0] = 500
-	points[7][7] = 500
+	points[0][0] = 5000
+	points[0][7] = 5000
+	points[7][0] = 5000
+	points[7][7] = 5000
 	#points[0][2] = 20
 	#points[0][5] = 20
 	#points[2][0] = 20
@@ -26,13 +26,13 @@ class Game:
 	#points[5][7] = 20
 	#points[7][2] = 20
 	#points[7][5] = 20
-	for x in xrange(1, 7):
+	for x in xrange(1, 6):
 		points[x][0] = 20
-	for x in xrange(1, 7):
+	for x in xrange(1, 6):
 		points[x][7] = 20
-	for y in xrange(1, 7):
+	for y in xrange(1, 6):
 		points[0][y] = 20
-	for y in xrange(1, 7):
+	for y in xrange(1, 6):
 		points[7][y] = 20
 	for x in xrange(1, 7):
 		points[x][1] = 1
@@ -406,7 +406,7 @@ Paste JSON here:<p/><textarea name=json cols=80 rows=24></textarea>
 			# more clever than just picking a random move.
 			#move = g.MinMax(g.Next(), valid_moves)
 			#score, move = g.ID_search(g, 10, time.time())
-			move = g.SearchBestmove(g, 5, time.time())
+			move = g.SearchBestmove(g, 4, time.time())
 			#print score
 			self.response.write(PrettyMove(move))
 

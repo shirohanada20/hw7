@@ -2,14 +2,20 @@
 
 ID_search is the function for MinMax algorithm.
 
-| Left align | Right align | Center align |
-|:-----------|------------:|:------------:|
-| This       | This        | This         |
-| column     | column      | column       |
-| will       | will        | will         |
-| be         | be          | be           |
-| left       | right       | center       |
-| aligned    | aligned     | aligned      |
+MinMaxと言う関数がありますが使っていません。
+メインの評価関数はSearchBestmoveです。
+
+EvaluateBoardの評価は以下のように盤面上の石の位置に依存します。
+
+|5000|-500|20|20|20|20|-500|5000|
+|---|---|---|---|---|---|---|---|
+|-500|-500|1|1|1|1|-500|-500|
+|20|3|3|3|3|3|3|20|
+|20|3|3|3|3|3|3|20|
+|20|3|3|3|3|3|3|20|
+|20|3|3|3|3|3|3|20|
+|-500|-500|1|1|1|1|-500|-500|
+|5000|-500|20|20|20|20|-500|5000|
 
 
 
